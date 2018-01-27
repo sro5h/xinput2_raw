@@ -1,2 +1,5 @@
 # Executables
 *.out
+
+# Object files
+*.o

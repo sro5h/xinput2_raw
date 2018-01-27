@@ -10,7 +10,6 @@ int main(void) {
         Display *d;
         Window w;
         XEvent e;
-        const char *msg = "Hello, World!";
         int s;
 
         d = XOpenDisplay(NULL);

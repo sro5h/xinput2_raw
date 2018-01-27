@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool initXInput(Display*);
+bool initXInput(Display*, int*);
 
 int main(void) {
         Display *d;
         Window w;
         XEvent e;
-        int s;
+        int s, xiOpcode;
 
         d = XOpenDisplay(NULL);
         if (d == NULL) {
@@ -20,7 +20,7 @@ int main(void) {
 
         s = DefaultScreen(d);
 
-        if (!initXInput(d))
+        if (!initXInput(d, &xiOpcode))
         {
                 fprintf(stderr, "XInput not availlable\n");
                 return EXIT_FAILURE;
@@ -57,7 +57,10 @@ int main(void) {
                                 break;
 
                         case GenericEvent:
-                                printf("Generic\n");
+                                if (e.xcookie.extension == xiOpcode)
+                                {
+                                        printf("XIEvent\n");
+                                }
                                 break;
                 }
         }
@@ -66,10 +69,10 @@ int main(void) {
         return EXIT_SUCCESS;
 }
 
-bool initXInput(Display* d)
+bool initXInput(Display* d, int* opcode)
 {
-        int xi_opcode, event, error;
-        if (XQueryExtension(d, "XInputExtension", &xi_opcode, &event, &error))
+        int event, error;
+        if (XQueryExtension(d, "XInputExtension", opcode, &event, &error))
         {
                 int major = 2, minor = 0;
                 if (XIQueryVersion(d, &major, &minor) != BadRequest)

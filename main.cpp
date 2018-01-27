@@ -5,6 +5,7 @@
 #include <cstring>
 
 bool initXInput(Display*, int*);
+void handleXIEvent(XGenericEventCookie*);
 
 int main(void) {
         Display *d;
@@ -58,9 +59,10 @@ int main(void) {
                                 break;
 
                         case GenericEvent:
-                                if (e.xcookie.extension == xiOpcode)
+                                if (e.xcookie.extension == xiOpcode
+                                                && XGetEventData(d, &e.xcookie))
                                 {
-                                        printf("XIEvent\n");
+                                        handleXIEvent(&e.xcookie);
                                 }
                                 break;
                 }
@@ -84,4 +86,33 @@ bool initXInput(Display* d, int* opcode)
         }
 
         return false;
+}
+
+void handleXIEvent(XGenericEventCookie* cookie)
+{
+        if (cookie->evtype == XI_RawMotion)
+        {
+                const XIRawEvent* rawe;
+                rawe = static_cast<const XIRawEvent*>(cookie->data);
+
+                const int maxValues = 2; // Only two mouse axis
+                double values[2] = { 0.0f, 0.0f };
+                int top = rawe->valuators.mask_len;
+                if (top > maxValues)
+                        top = maxValues;
+                top *= 8;
+
+                // Get raw values
+                const double* input_values = rawe->raw_values;
+                for (int i = 0; i < top && i < maxValues; ++i)
+                {
+                        if (XIMaskIsSet(rawe->valuators.mask, i))
+                        {
+                                values[i] = *input_values;
+                                ++input_values;
+                        }
+                }
+
+                printf("Raw motion: %lf, %lf\n", values[0], values[1]);
+        }
 }

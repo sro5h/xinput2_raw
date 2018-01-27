@@ -5,6 +5,7 @@
 #include <cstring>
 
 bool initXInput(Display*, int*);
+void enableRawMotion(Display*, bool);
 void handleXIEvent(XGenericEventCookie*);
 
 int main(void) {
@@ -31,19 +32,7 @@ int main(void) {
                         BlackPixel(d, s), WhitePixel(d, s));
         XSelectInput(d, w, ExposureMask | KeyPressMask | PointerMotionMask);
 
-        // XInput2 events
-        XIEventMask eventmask;
-        unsigned char mask[XIMaskLen(XI_RawMotion)];
-        std::memset(mask, 0, sizeof(mask));
-        eventmask.deviceid = XIAllMasterDevices;
-        eventmask.mask_len = sizeof(mask);
-        eventmask.mask = mask;
-        XISetMask(mask, XI_RawMotion);
-        if (XISelectEvents(d, DefaultRootWindow(d), &eventmask, 1) != Success)
-        {
-                fprintf(stderr, "Could not set XInput2 event mask\n");
-                return EXIT_FAILURE;
-        }
+        enableRawMotion(d, true);
 
         XMapWindow(d, w);
 
@@ -55,7 +44,9 @@ int main(void) {
                                 printf("Exposed\n");
                                 break;
 
-                        case MotionNotify:
+                        case KeyPress:
+                                printf("Disable raw motion\n");
+                                enableRawMotion(d, false);
                                 break;
 
                         case GenericEvent:
@@ -86,6 +77,30 @@ bool initXInput(Display* d, int* opcode)
         }
 
         return false;
+}
+
+void enableRawMotion(Display* d, bool enabled)
+{
+        XIEventMask eventMask;
+        unsigned char mask[XIMaskLen(XI_LASTEVENT)];
+        std::memset(mask, 0, sizeof(mask));
+        eventMask.deviceid = XIAllMasterDevices;
+        eventMask.mask_len = sizeof(mask);
+        eventMask.mask = mask;
+
+        if (enabled)
+        {
+                XISetMask(mask, XI_RawMotion);
+        }
+        else
+        {
+                XISetMask(mask, 0);
+        }
+
+        if (XISelectEvents(d, DefaultRootWindow(d), &eventMask, 1) != Success)
+        {
+                fprintf(stderr, "Could not set XInput2 event mask\n");
+        }
 }
 
 void handleXIEvent(XGenericEventCookie* cookie)

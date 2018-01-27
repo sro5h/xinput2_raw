@@ -1,8 +1,8 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput2.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 bool initXInput(Display*, int*);
 
@@ -32,7 +32,8 @@ int main(void) {
 
         // XInput2 events
         XIEventMask eventmask;
-        unsigned char mask[] = { 0, 0, 0 };
+        unsigned char mask[XIMaskLen(XI_RawMotion)];
+        std::memset(mask, 0, sizeof(mask));
         eventmask.deviceid = XIAllMasterDevices;
         eventmask.mask_len = sizeof(mask);
         eventmask.mask = mask;

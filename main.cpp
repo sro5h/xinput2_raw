@@ -96,7 +96,7 @@ void handleXIEvent(XGenericEventCookie* cookie)
                 rawe = static_cast<const XIRawEvent*>(cookie->data);
 
                 const int maxValues = 2; // Only two mouse axis
-                double values[2] = { 0.0f, 0.0f };
+                int values[2] = { 0, 0 };
                 int top = rawe->valuators.mask_len;
                 if (top > maxValues)
                         top = maxValues;
@@ -108,11 +108,11 @@ void handleXIEvent(XGenericEventCookie* cookie)
                 {
                         if (XIMaskIsSet(rawe->valuators.mask, i))
                         {
-                                values[i] = *input_values;
+                                values[i] = static_cast<int>(*input_values);
                                 ++input_values;
                         }
                 }
 
-                printf("Raw motion: %lf, %lf\n", values[0], values[1]);
+                printf("Raw motion: %d, %d\n", values[0], values[1]);
         }
 }

@@ -36,26 +36,34 @@ int main(void) {
 
         XMapWindow(d, w);
 
+        // I support the WM_DELETE_WINDOW protocol
+        Atom WM_DELETE_WINDOW = XInternAtom(d, "WM_DELETE_WINDOW", False);
+        XSetWMProtocols(d, w, &WM_DELETE_WINDOW, 1);
+
         while (1) {
                 XNextEvent(d, &e);
-                switch (e.type)
+                if (e.type == Expose)
                 {
-                        case Expose:
-                                printf("Exposed\n");
-                                break;
-
-                        case KeyPress:
-                                printf("Disable raw motion\n");
-                                enableRawMotion(d, false);
-                                break;
-
-                        case GenericEvent:
-                                if (e.xcookie.extension == xiOpcode
-                                                && XGetEventData(d, &e.xcookie))
-                                {
-                                        handleXIEvent(&e.xcookie);
-                                }
-                                break;
+                        printf("Exposed\n");
+                }
+                else if (e.type == KeyPress)
+                {
+                        printf("Disable raw motion\n");
+                        enableRawMotion(d, false);
+                }
+                else if (e.type == ClientMessage)
+                {
+                        // Should check for message types but only WM_DELETE_WINDOW
+                        // is registered so it is safe to break in this example.
+                        break;
+                }
+                else if (e.type == GenericEvent)
+                {
+                        if (e.xcookie.extension == xiOpcode
+                                        && XGetEventData(d, &e.xcookie))
+                        {
+                                handleXIEvent(&e.xcookie);
+                        }
                 }
         }
 
